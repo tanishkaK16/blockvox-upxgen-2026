@@ -1,0 +1,401 @@
+@import "tailwindcss";
+
+@theme {
+  --color-blockvox-red: #E30613;
+  --color-blockvox-red-dark: #B80510;
+  --color-blockvox-red-glow: rgba(227, 6, 19, 0.4);
+  --color-blockvox-bg: #0A0A0A;
+  --color-blockvox-bg-alt: #111827;
+  --color-blockvox-card: rgba(17, 24, 39, 0.6);
+  --color-blockvox-border: rgba(255, 255, 255, 0.06);
+  --color-blockvox-text: #F9FAFB;
+  --color-blockvox-muted: #9CA3AF;
+  --color-blockvox-cyan: #06B6D4;
+  --color-blockvox-cyan-glow: rgba(6, 182, 212, 0.15);
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Base ────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-blockvox-bg);
+  color: var(--color-blockvox-text);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--color-blockvox-red);
+  color: white;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #111; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-blockvox-red); }
+
+/* ── Glassmorphism Card ──────────────────────────────── */
+.glass-card {
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.7), rgba(17, 24, 39, 0.3));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(227, 6, 19, 0.3);
+  box-shadow: 0 0 40px rgba(227, 6, 19, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+.glass-premium {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* ── Buttons ─────────────────────────────────────────── */
+.btn-primary {
+  background: linear-gradient(135deg, #E30613 0%, #B80510 100%);
+  color: white;
+  font-weight: 600;
+  padding: 12px 32px;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(227, 6, 19, 0.5);
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.btn-primary:hover::before {
+  transform: translateX(100%);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 30px rgba(227, 6, 19, 0.4), 0 0 60px rgba(227, 6, 19, 0.2);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: white;
+  font-weight: 500;
+  padding: 12px 32px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-blockvox-red);
+  background: rgba(227, 6, 19, 0.08);
+}
+
+/* ── Glow Effects ────────────────────────────────────── */
+.glow-red { box-shadow: 0 0 20px rgba(227, 6, 19, 0.3); }
+.glow-cyan { box-shadow: 0 0 20px rgba(6, 182, 212, 0.3); }
+.text-glow-red { text-shadow: 0 0 40px rgba(227, 6, 19, 0.5); }
+.glow-pulse { animation: glow-pulse 2s infinite ease-in-out; }
+
+@keyframes glow-pulse {
+  0%, 100% { filter: drop-shadow(0 0 5px rgba(227, 6, 19, 0.4)); }
+  50% { filter: drop-shadow(0 0 15px rgba(227, 6, 19, 0.7)); }
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Animated background grid ────────────────────────── */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ── Particle canvas ─────────────────────────────────── */
+.particle-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Gradient orbs ───────────────────────────────────── */
+.gradient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.15;
+  animation: float 20s infinite ease-in-out;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -50px) scale(1.1); }
+  50% { transform: translate(-20px, 20px) scale(0.9); }
+  75% { transform: translate(10px, 40px) scale(1.05); }
+}
+
+/* ── Section Fade In ─────────────────────────────────── */
+.fade-in-section {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.fade-in-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Pulse ring ──────────────────────────────────────── */
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  50% { transform: scale(1.2); opacity: 0; }
+  100% { transform: scale(0.8); opacity: 0.6; }
+}
+
+.pulse-ring {
+  animation: pulse-ring 3s infinite ease-in-out;
+}
+
+/* ── Count up ────────────────────────────────────────── */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Spin slow ───────────────────────────────────────── */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow { animation: spin-slow 20s linear infinite; }
+
+/* ── Dash animation for SVG ──────────────────────────── */
+@keyframes dash {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ── Vote Flow Success Animations ────────────────────── */
+
+/* Animated SVG checkmark: circle stroke draws in */
+@keyframes circleStroke {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Circle background fills in */
+@keyframes circleFill {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Checkmark path draws in */
+@keyframes checkDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Success pulse rings – scale outward and fade */
+@keyframes successPulse1 {
+  0% { transform: scale(0.9); opacity: 0; }
+  30% { opacity: 0.6; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+@keyframes successPulse2 {
+  0% { transform: scale(0.9); opacity: 0; }
+  40% { opacity: 0.4; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+
+@keyframes successPulse3 {
+  0% { transform: scale(0.9); opacity: 0; }
+  50% { opacity: 0.2; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Generic fade + slide in from below */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scale-in pop (for radio dot) */
+@keyframes scaleIn {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+/* Glow pulse for the success card border */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(227, 6, 19, 0.1); }
+  50% { box-shadow: 0 0 40px rgba(227, 6, 19, 0.25); }
+}
+
+/* ── Rainbow Kit Deep Overrides ──────────────────────── */
+
+/* Core accent */
+[data-rk] {
+  --rk-colors-accentColor: #E30613 !important;
+  --rk-colors-accentColorForeground: #fff !important;
+  --rk-colors-connectButtonBackground: transparent !important;
+  --rk-colors-connectButtonInnerBackground: rgba(227, 6, 19, 0.08) !important;
+  --rk-colors-modalBackground: #111827 !important;
+  --rk-colors-modalBorder: rgba(255, 255, 255, 0.08) !important;
+  --rk-colors-profileForeground: #0f172a !important;
+  --rk-colors-closeButtonBackground: rgba(255, 255, 255, 0.06) !important;
+  --rk-colors-generalBorder: rgba(255, 255, 255, 0.06) !important;
+  --rk-colors-menuItemBackground: rgba(227, 6, 19, 0.06) !important;
+  --rk-colors-selectedOptionBorder: rgba(227, 6, 19, 0.5) !important;
+  --rk-radii-modal: 20px !important;
+}
+
+/* Modal overlay */
+[data-rk] [role="dialog"] {
+  backdrop-filter: blur(8px);
+}
+
+/* Modal container — glassmorphism */
+[data-rk] [data-testid="rk-modal-card"],
+[data-rk] section[role="document"] {
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(10, 10, 10, 0.98)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 0 80px rgba(227, 6, 19, 0.08), 0 25px 50px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Wallet list items */
+[data-rk] button[data-testid^="rk-wallet-option"] {
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  transition: all 0.25s ease !important;
+}
+[data-rk] button[data-testid^="rk-wallet-option"]:hover {
+  border-color: rgba(227, 6, 19, 0.3) !important;
+  background: rgba(227, 6, 19, 0.06) !important;
+  box-shadow: 0 0 20px rgba(227, 6, 19, 0.08) !important;
+}
+
+/* Chain switcher list items */
+[data-rk] [data-testid="rk-chain-option"] {
+  transition: all 0.2s ease !important;
+}
+[data-rk] [data-testid="rk-chain-option"]:hover {
+  background: rgba(227, 6, 19, 0.08) !important;
+}
+[data-rk] [data-testid="rk-chain-option"][aria-selected="true"],
+[data-rk] [data-testid="rk-chain-option"][data-selected="true"] {
+  border-color: rgba(227, 6, 19, 0.5) !important;
+  background: rgba(227, 6, 19, 0.1) !important;
+}
+
+/* Primary action buttons inside modals */
+[data-rk] button[data-testid="rk-connect-button"],
+[data-rk] button[data-testid="rk-account-button"] {
+  background: linear-gradient(135deg, #E30613, #B80510) !important;
+  border: 1px solid rgba(227, 6, 19, 0.5) !important;
+  box-shadow: 0 0 15px rgba(227, 6, 19, 0.2) !important;
+  transition: all 0.3s ease !important;
+}
+[data-rk] button[data-testid="rk-connect-button"]:hover,
+[data-rk] button[data-testid="rk-account-button"]:hover {
+  box-shadow: 0 0 30px rgba(227, 6, 19, 0.4) !important;
+}
+
+/* Close button */
+[data-rk] [aria-label="Close"] {
+  color: #9CA3AF !important;
+  transition: color 0.2s ease !important;
+}
+[data-rk] [aria-label="Close"]:hover {
+  color: #E30613 !important;
+}
+
+/* "Get a Wallet" link */
+[data-rk] a[href*="learn"] {
+  color: #E30613 !important;
+}
+
+/* Scrollbar inside modals */
+[data-rk] ::-webkit-scrollbar { width: 4px; }
+[data-rk] ::-webkit-scrollbar-track { background: transparent; }
+[data-rk] ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+/* ── Table ───────────────────────────────────────────── */
+.audit-table th {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: #9CA3AF;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.audit-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 0.85rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.audit-table tr:hover td {
+  background: rgba(227, 6, 19, 0.04);
+}
+
+/* ── Status Badge ────────────────────────────────────── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-badge.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.status-badge.ended {
+  background: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.status-badge.pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #F59E0B;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
