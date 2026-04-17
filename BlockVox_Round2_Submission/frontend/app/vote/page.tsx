@@ -217,7 +217,8 @@ export default function VotePage() {
   const { data: walletClient } = useWalletClient();
   const [phase, setPhase] = useState<Phase>('connect');
   const [candidates, setCandidates] = useState<Candidate[]>([...DEFAULT_CANDIDATES]);
-  const [nftId, setNftId] = useState<string>(''); // VoterPass NFT ID for nullification
+  const [nftId, setNftId] = useState<string>(''); 
+  const [demoMode, setDemoMode] = useState<boolean>(false); // NEW: Demo Mode toggle
   const [votingMode, setVotingMode] = useState<VotingMode>(VotingMode.Single);
   const [selectedCandidate, setSelectedCandidate] = useState<number | null>(null);
   const [approvals, setApprovals] = useState<number[]>([]);
@@ -381,14 +382,15 @@ export default function VotePage() {
 
         /* 
           --- PHASE 1: COMMIT ON-CHAIN ---
-          We broadcast the pre-computed hash and Merkle Proof.
-          The nftId (if provided) is nullified in this transaction.
+          If demoMode is active, we use 0 or a fixed value.
         */
         setLoadingStep('Broadcasting to Avalanche Fuji...');
+        const actualNftId = demoMode ? 0n : BigInt(nftId || 0);
+        
         const txHash = await commitVoteOnChain(
           commitment, 
           proofNodes as `0x${string}`[], 
-          BigInt(nftId || 0),
+          actualNftId,
           walletClient, 
           address
         );
@@ -529,7 +531,30 @@ export default function VotePage() {
 
         {/* ── Header ── */}
         <div className="text-center mb-12">
+          {demoMode && (
+            <div className="mb-6 flex justify-center">
+              <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-full px-4 py-1.5 animate-pulse">
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">
+                  Demo Mode Active – NFT Bypassed
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3 py-1 mr-2">
+               <input 
+                 type="checkbox" 
+                 checked={demoMode} 
+                 onChange={(e) => setDemoMode(e.target.checked)}
+                 id="demo-toggle-header"
+                 className="w-3 h-3 accent-[#E30613] cursor-pointer"
+               />
+               <label htmlFor="demo-toggle-header" className="text-[9px] font-extrabold text-gray-500 uppercase cursor-pointer">
+                 Demo
+               </label>
+            </div>
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#E30613]">
               Cast Your Vote
             </span>
@@ -538,7 +563,7 @@ export default function VotePage() {
                 ? 'text-green-400 border-green-500/30 bg-green-500/10'
                 : 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10'
             }`}>
-              {liveMode ? '● Live' : '◉ Demo'}
+              {liveMode ? '● Live' : '◉ Simulation'}
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -785,11 +810,9 @@ export default function VotePage() {
                         if (votingMode === VotingMode.Single) {
                           setSelectedCandidate(c.id);
                         } else if (votingMode === VotingMode.Approval) {
-                          if (approvals.includes(c.id)) {
-                            setApprovals(approvals.filter(id => id !== c.id));
-                          } else {
-                            setApprovals([...approvals, c.id]);
-                          }
+                          setApprovals(prev => 
+                            prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id]
+                          );
                         }
                       }}
                       className={`
@@ -819,32 +842,40 @@ export default function VotePage() {
                           )}
                           
                           {votingMode === VotingMode.Approval && (
-                            <input
-                              type="checkbox"
-                              checked={approvals.includes(c.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) setApprovals([...approvals, c.id]);
-                                else setApprovals(approvals.filter(id => id !== c.id));
-                              }}
-                              className="w-5 h-5 rounded border-2 border-white/10 bg-transparent checked:bg-[#E30613] appearance-none cursor-pointer"
-                            />
+                            <div className={`
+                              w-5 h-5 rounded border-2 flex items-center justify-center transition-all
+                              ${approvals.includes(c.id)
+                                ? 'border-[#E30613] bg-[#E30613]'
+                                : 'border-gray-600 group-hover:border-gray-400'
+                              }
+                            `}>
+                              {approvals.includes(c.id) && (
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4">
+                                  <path d="M20 6L9 17l-5-5" />
+                                </svg>
+                              )}
+                            </div>
                           )}
 
                           <div className={votingMode === VotingMode.Approval ? "ml-2" : ""}>
-                            <span className="font-bold text-white block">{c.name}</span>
-                            <span className="text-xs text-gray-500 block mt-0.5">{c.party}</span>
+                            <span className="font-bold text-white block leading-tight">{c.name}</span>
+                            <span className="text-xs text-gray-500 block mt-0.5 font-medium">{c.party}</span>
                           </div>
                         </div>
 
                         {votingMode === VotingMode.Score && (
-                          <div className="flex flex-col items-end gap-2 w-48">
-                            <span className="text-[10px] font-black text-[#E30613] uppercase tracking-widest">
-                              Score: {scores[i] || 0}
-                            </span>
+                          <div className="flex flex-col items-end gap-2 w-48" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Intensity:</span>
+                              <span className="text-[10px] font-black text-[#E30613] uppercase tracking-widest bg-[#E30613]/10 px-2 py-0.5 rounded">
+                                {scores[i] || 0}
+                              </span>
+                            </div>
                             <input
                               type="range"
                               min="0"
                               max="10"
+                              step="1"
                               value={scores[i] || 0}
                               onChange={(e) => {
                                 const newScores = [...scores];

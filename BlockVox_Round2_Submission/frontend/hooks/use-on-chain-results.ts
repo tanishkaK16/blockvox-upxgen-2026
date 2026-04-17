@@ -20,6 +20,8 @@ const ABI = parseAbi([
   'function getResults() view returns (uint256[])',
   'function isElectionActive() view returns (bool)',
   'event VoteRevealed(address indexed voter, uint256 candidateId)',
+  'event ApprovalVoteRevealed(address indexed voter, uint256[] approvedCandidates)',
+  'event ScoreVoteRevealed(address indexed voter, uint256[] scores)',
   'event ElectionStarted(bytes32 merkleRoot)',
   'event ElectionEnded(uint256[] finalResults)',
 ]);
@@ -125,19 +127,30 @@ export function useOnChainResults(numCandidates = CANDIDATE_SLOTS): OnChainResul
     }
 
     try {
-      const unsub = client.watchContractEvent({
+      const unsub1 = client.watchContractEvent({
         address: CONTRACT_ADDRESS,
         abi: ABI,
         eventName: 'VoteRevealed',
-        onLogs: (_logs: Log[]) => {
-          // A new vote was revealed — refresh immediately
-          fetchResults();
-        },
-        onError: (err) => {
-          console.warn('[useOnChainResults] event watch error:', err);
-        },
+        onLogs: () => fetchResults(),
       });
-      unsubRef.current = unsub;
+      const unsub2 = client.watchContractEvent({
+        address: CONTRACT_ADDRESS,
+        abi: ABI,
+        eventName: 'ApprovalVoteRevealed',
+        onLogs: () => fetchResults(),
+      });
+      const unsub3 = client.watchContractEvent({
+        address: CONTRACT_ADDRESS,
+        abi: ABI,
+        eventName: 'ScoreVoteRevealed',
+        onLogs: () => fetchResults(),
+      });
+
+      unsubRef.current = () => {
+        unsub1();
+        unsub2();
+        unsub3();
+      };
     } catch (err) {
       console.warn('[useOnChainResults] could not subscribe to events:', err);
     }
