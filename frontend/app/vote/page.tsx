@@ -18,6 +18,7 @@ import { loadMerkleTree, getProof, verifyProof } from '@/lib/merkle-tree';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { ShieldCheck, Brain } from 'lucide-react';
 
 type Phase = 'connect' | 'merkle' | 'commit' | 'reveal' | 'success' | 'voted';
 

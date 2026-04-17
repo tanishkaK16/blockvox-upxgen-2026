@@ -106,17 +106,17 @@ export async function revealVoteOnChain(
   account: Address
 ): Promise<`0x${string}`> {
   let functionName: 'revealVote' | 'voteApproval' | 'voteScore' = 'revealVote';
-  let args: any[] = [];
+  let args: readonly any[] = [];
 
   if (mode === 0) {
     functionName = 'revealVote';
-    args = [BigInt(voteData as number), salt];
+    args = [BigInt(voteData as number), salt] as const;
   } else if (mode === 1) {
     functionName = 'voteApproval';
-    args = [(voteData as number[]).map(id => BigInt(id)), salt];
+    args = [(voteData as number[]).map(id => BigInt(id)), salt] as const;
   } else {
     functionName = 'voteScore';
-    args = [(voteData as number[]).map(s => BigInt(s)), salt];
+    args = [(voteData as number[]).map(s => BigInt(s)), salt] as const;
   }
 
   return await walletClient.writeContract({
