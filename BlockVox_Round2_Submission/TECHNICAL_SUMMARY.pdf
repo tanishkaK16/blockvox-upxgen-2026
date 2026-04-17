@@ -1,0 +1,26 @@
+BlockVox Round 2 - Technical Summary
+PVG Nashik | upXgen 2026
+
+1. Problem We Solved
+- Double voting using multiple wallets
+- Lack of trust in vote counting
+- Unfair results from old voting methods
+
+2. Our Technical Approach
+- Used Avalanche Fuji for fast and cheap transactions
+- Built commit-reveal voting so votes stay private during election
+- Added burnable NFT + nullifier to enforce one-person-one-vote
+- Created three voting modes so admin can choose the fairest one
+- Built a live simulator to prove mathematical fairness
+
+3. Core Implementation
+- Smart contract handles NFT minting, burning, and nullifier check
+- Frontend has admin panel, voting wizard, and fairness simulator
+- Everything is on-chain and verifiable on Snowtrace
+
+4. Why This is Original
+All logic was developed during the hackathon. The combination of NFT nullifier and interactive fairness simulator is our unique part.
+
+We have demonstrated core functionality: creating election, registering voter, casting vote with commit-reveal, and viewing results.
+
+Ready for code review.
