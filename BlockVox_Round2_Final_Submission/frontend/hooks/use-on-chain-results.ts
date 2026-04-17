@@ -101,32 +101,36 @@ export function useOnChainResults(numCandidates = CANDIDATE_SLOTS): OnChainResul
         .map((v) => Number(v));
 
       // ─── HYBRID SYNC: Merge Simulated (Demo) Votes ───
+      let hasSimVotes = false;
       try {
         const simData = localStorage.getItem('blockvox_simulated_votes');
         if (simData) {
           const simVotes = JSON.parse(simData);
-          simVotes.forEach((sv: any) => {
-            if (Array.isArray(sv.voteData)) {
-              // Approval/Score (currently we aggregate count for visual bars)
-              sv.voteData.forEach((idOrScore: number, idx: number) => {
-                if (sv.mode === 1) { // Approval: sv.voteData is candidateIds[]
-                  if (idOrScore < numCandidates) newCounts[idOrScore]++;
-                } else if (sv.mode === 2) { // Score: sv.voteData is scores[]
-                  if (idx < numCandidates) newCounts[idx] += (idOrScore > 0 ? 1 : 0); // Simplified for bars
+          if (Array.isArray(simVotes)) {
+            hasSimVotes = simVotes.length > 0;
+            simVotes.forEach((sv: any) => {
+              if (sv && typeof sv === 'object') {
+                if (Array.isArray(sv.voteData)) {
+                  sv.voteData.forEach((idOrScore: number, idx: number) => {
+                    if (sv.mode === 1) { 
+                      if (idOrScore < numCandidates) newCounts[idOrScore]++;
+                    } else if (sv.mode === 2) {
+                      if (idx < numCandidates) newCounts[idx] += (idOrScore > 0 ? 1 : 0);
+                    }
+                  });
+                } else if (typeof sv.voteData === 'number') {
+                  if (sv.voteData < numCandidates) newCounts[sv.voteData]++;
                 }
-              });
-            } else {
-              // Single Choice
-              if (sv.voteData < numCandidates) newCounts[sv.voteData]++;
-            }
-          });
+              }
+            });
+          }
         }
       } catch (e) {
         console.warn('[useOnChainResults] Failed to merge simulated votes:', e);
       }
 
       setCounts(newCounts);
-      setElectionActive(active || true); // Force active in demo if we have sim votes
+      setElectionActive(active || hasSimVotes);
       setStatus(active ? 'live' : 'inactive');
       setLastUpdated(new Date().toISOString());
 

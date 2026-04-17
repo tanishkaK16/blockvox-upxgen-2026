@@ -14,7 +14,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOnChainResults, type OnChainStatus } from '@/hooks/use-on-chain-results';
 import { getElectionData, type Candidate } from '@/lib/election-store';
 import { CANDIDATES as DEFAULT_CANDIDATES } from '@/lib/contract';
@@ -24,7 +24,12 @@ import {
   formatTime,
   formatNumber,
 } from '@/lib/mock-data';
-
+import { 
+  Activity, Zap, CheckCircle2, AlertTriangle, 
+  RefreshCw, Globe, Database, Shield,
+  ShieldCheck, ArrowUpRight, Clock, User,
+  Share2, ExternalLink, Info
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 /* ─── Animated SVG bar chart ─────────────────────────── */
@@ -86,24 +91,44 @@ function BarChart({ counts, candidates }: { counts: number[]; candidates: Candid
 
 /* ─── Status Pill ──────────────────────────────────── */
 function StatusPill({ status }: { status: OnChainStatus }) {
-  const map: Record<OnChainStatus, { label: string; cls: string; dot: string }> = {
+  const map: Record<OnChainStatus, { label: string | React.ReactNode; cls: string; dot: string }> = {
     connecting: {
-      label: 'Connecting…',
+      label: (
+        <span className="flex items-center gap-1.5">
+          <RefreshCw size={10} className="animate-spin" />
+          Connecting
+        </span>
+      ),
       cls: 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10',
       dot: 'bg-yellow-400 animate-pulse',
     },
     live: {
-      label: '● On-Chain',
+      label: (
+        <span className="flex items-center gap-1.5">
+          <Activity size={10} className="animate-pulse" />
+          On-Chain
+        </span>
+      ),
       cls: 'text-green-400 border-green-500/30 bg-green-500/10',
       dot: 'bg-green-500 animate-pulse',
     },
     inactive: {
-      label: '◉ No Active Election',
+      label: (
+        <span className="flex items-center gap-1.5">
+          <Zap size={10} />
+          Demo Mode
+        </span>
+      ),
       cls: 'text-gray-400 border-gray-500/30 bg-gray-500/10',
       dot: 'bg-gray-500',
     },
     error: {
-      label: '⚠ RPC Error',
+      label: (
+        <span className="flex items-center gap-1.5">
+          <AlertTriangle size={10} />
+          RPC Error
+        </span>
+      ),
       cls: 'text-red-400 border-red-500/30 bg-red-500/10',
       dot: 'bg-red-500',
     },

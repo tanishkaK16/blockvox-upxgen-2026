@@ -15,6 +15,12 @@
 'use client';
 
 import { useState } from 'react';
+import { 
+  Plus, Trash2, Users, Key, Settings, 
+  Terminal, Shield, Activity, Zap,
+  CheckCircle2, AlertTriangle, Info,
+  Search, ShieldCheck
+} from 'lucide-react';
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { SNOWTRACE_URL } from '@/lib/contract';
@@ -251,12 +257,13 @@ export default function AdminPage() {
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#E30613]">
               Admin Panel
             </span>
-            <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${
               liveMode
                 ? 'text-green-400 border-green-500/30 bg-green-500/10'
                 : 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10'
             }`}>
-              {liveMode ? '● Live' : '◉ Demo'}
+              {liveMode ? <Activity size={10} /> : <Zap size={10} />}
+              {liveMode ? 'Live' : 'Demo'}
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-2">Election Management</h1>

@@ -14,7 +14,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOnChainResults, type OnChainStatus } from '@/hooks/use-on-chain-results';
 import { getElectionData, type Candidate } from '@/lib/election-store';
 import { CANDIDATES as DEFAULT_CANDIDATES } from '@/lib/contract';
@@ -91,7 +91,7 @@ function BarChart({ counts, candidates }: { counts: number[]; candidates: Candid
 
 /* ─── Status Pill ──────────────────────────────────── */
 function StatusPill({ status }: { status: OnChainStatus }) {
-  const map: Record<OnChainStatus, { label: string | JSX.Element; cls: string; dot: string }> = {
+  const map: Record<OnChainStatus, { label: string | React.ReactNode; cls: string; dot: string }> = {
     connecting: {
       label: (
         <span className="flex items-center gap-1.5">

@@ -36,7 +36,13 @@ import { loadMerkleTree, getProof, verifyProof } from '@/lib/merkle-tree';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { ShieldCheck, Brain } from 'lucide-react';
+import { 
+  ShieldCheck, Brain, Key, Fingerprint, 
+  Activity, Zap, CheckCircle2, AlertTriangle,
+  RefreshCw, Lock, Unlock, Send, CheckCircle,
+  LayoutDashboard, Terminal, Info, ChevronRight,
+  ArrowRight
+} from 'lucide-react';
 
 type Phase = 'connect' | 'merkle' | 'commit' | 'reveal' | 'success' | 'voted';
 
@@ -599,12 +605,13 @@ export default function VotePage() {
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#E30613]">
               Cast Your Vote
             </span>
-            <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${
               liveMode
                 ? 'text-green-400 border-green-500/30 bg-green-500/10'
                 : 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10'
             }`}>
-              {liveMode ? '● Live' : '◉ Simulation'}
+              {liveMode ? <Activity size={10} /> : <Zap size={10} />}
+              {liveMode ? 'Live' : 'Simulation'}
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -615,8 +622,8 @@ export default function VotePage() {
             reveal window — then gets tallied immutably on Avalanche.
           </p>
           {txError && (
-            <div className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm animate-[fadeSlideIn_0.3s_ease-out]">
-              ⚠️ {txError}
+            <div className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm animate-[fadeSlideIn_0.3s_ease-out] flex items-center justify-center gap-2">
+              <AlertTriangle size={16} /> {txError}
             </div>
           )}
         </div>
@@ -648,10 +655,12 @@ export default function VotePage() {
                       <span className="absolute -inset-[5px] rounded-full border-2 border-[#E30613]/30 animate-pulse" />
                     )}
                     {isDone ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
+                      <CheckCircle2 size={16} strokeWidth={3} />
                     ) : (
+                      i === 0 ? <Key size={16} /> :
+                      i === 1 ? <Shield size={16} /> :
+                      i === 2 ? <Lock size={16} /> :
+                      i === 3 ? <Send size={16} /> :
                       i + 1
                     )}
                   </div>
