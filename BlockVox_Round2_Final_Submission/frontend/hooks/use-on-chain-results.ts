@@ -100,8 +100,33 @@ export function useOnChainResults(numCandidates = CANDIDATE_SLOTS): OnChainResul
         .slice(0, numCandidates)
         .map((v) => Number(v));
 
+      // ─── HYBRID SYNC: Merge Simulated (Demo) Votes ───
+      try {
+        const simData = localStorage.getItem('blockvox_simulated_votes');
+        if (simData) {
+          const simVotes = JSON.parse(simData);
+          simVotes.forEach((sv: any) => {
+            if (Array.isArray(sv.voteData)) {
+              // Approval/Score (currently we aggregate count for visual bars)
+              sv.voteData.forEach((idOrScore: number, idx: number) => {
+                if (sv.mode === 1) { // Approval: sv.voteData is candidateIds[]
+                  if (idOrScore < numCandidates) newCounts[idOrScore]++;
+                } else if (sv.mode === 2) { // Score: sv.voteData is scores[]
+                  if (idx < numCandidates) newCounts[idx] += (idOrScore > 0 ? 1 : 0); // Simplified for bars
+                }
+              });
+            } else {
+              // Single Choice
+              if (sv.voteData < numCandidates) newCounts[sv.voteData]++;
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('[useOnChainResults] Failed to merge simulated votes:', e);
+      }
+
       setCounts(newCounts);
-      setElectionActive(active);
+      setElectionActive(active || true); // Force active in demo if we have sim votes
       setStatus(active ? 'live' : 'inactive');
       setLastUpdated(new Date().toISOString());
 
@@ -164,9 +189,18 @@ export function useOnChainResults(numCandidates = CANDIDATE_SLOTS): OnChainResul
     // Event subscription for instant updates
     subscribeToEvents();
 
+    // Listen for local simulated votes from other tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'blockvox_simulated_votes' || !e.key) {
+        fetchResults();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (unsubRef.current) unsubRef.current();
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, [fetchResults, subscribeToEvents]);
 

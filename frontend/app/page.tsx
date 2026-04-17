@@ -2,6 +2,16 @@
 
 import Link from 'next/link';
 import { useSectionObserver } from '@/hooks/use-section-observer';
+import { 
+  Unlock, EyeOff, Ban, AlertTriangle, 
+  ShieldCheck, LayoutDashboard, Brain, 
+  Activity, Zap, Info, AlertCircle,
+  FileSearch, Lock, CheckCircle2,
+  ChevronDown, ArrowRight, Layers,
+  Fingerprint, Database, Eye,
+  Lock as LockIcon,  // Aliased to avoid conflict
+  Share2
+} from 'lucide-react';
 
 /* ─────────────────────── Hero ─────────────────────── */
 function HeroSection() {
@@ -32,11 +42,11 @@ function HeroSection() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link href="/vote" className="btn-primary text-lg px-10 py-4">
-            Connect Wallet &amp; Vote
+          <Link href="/vote" className="btn-primary text-lg px-10 py-4 flex items-center gap-2">
+            Connect Wallet &amp; Vote <ArrowRight size={20} />
           </Link>
-          <Link href="#how-it-works" className="btn-secondary px-8 py-4">
-            How it Works ↓
+          <Link href="#how-it-works" className="btn-secondary px-8 py-4 flex items-center gap-2">
+            How it Works <ChevronDown size={20} />
           </Link>
         </div>
 
@@ -49,16 +59,9 @@ function HeroSection() {
                 style={{ animationDelay: `${i * 0.3}s` }}
               >
                 {i % 2 === 0 ? (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <rect x="3" y="5" width="18" height="14" rx="2" />
-                    <path d="M3 10h18" />
-                    <path d="M10 10v9" />
-                  </svg>
+                  <LayoutDashboard size={20} strokeWidth={1.5} />
                 ) : (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E30613" strokeWidth="1.5">
-                    <path d="M9 11l3 3L22 4" />
-                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
-                  </svg>
+                  <ShieldCheck size={20} color="#E30613" strokeWidth={1.5} />
                 )}
               </div>
               {i < 4 && (
@@ -81,22 +84,22 @@ function ProblemSection() {
 
   const problems = [
     {
-      icon: '🔓',
+      icon: <Unlock className="text-[#E30613]" />,
       title: 'Centralized Trust',
       desc: 'Traditional voting relies on central authorities that can be corrupted, coerced, or compromised.',
     },
     {
-      icon: '👁️',
+      icon: <EyeOff className="text-[#06B6D4]" />,
       title: 'No Voter Privacy',
       desc: 'Current systems expose voter identity, enabling intimidation and vote-buying.',
     },
     {
-      icon: '🚫',
+      icon: <Ban className="text-gray-400" />,
       title: 'Unverifiable Results',
       desc: 'Citizens cannot independently verify that their vote was counted correctly.',
     },
     {
-      icon: '⚠️',
+      icon: <AlertTriangle className="text-yellow-500" />,
       title: 'Fraud & Manipulation',
       desc: 'Paper ballots and EVMs are susceptible to tampering, stuffing, and Sybil attacks.',
     },
@@ -127,7 +130,7 @@ function ProblemSection() {
               className="glass-card p-8"
               style={{ transitionDelay: `${i * 100}ms` }}
             >
-              <div className="text-3xl mb-4">{p.icon}</div>
+              <div className="mb-4">{p.icon}</div>
               <h3 className="text-lg font-semibold mb-2">{p.title}</h3>
               <p className="text-sm text-gray-400 leading-relaxed">{p.desc}</p>
             </div>
@@ -225,45 +228,27 @@ function FeaturesSection() {
     {
       title: 'Commit-Reveal Voting',
       desc: 'Two-phase voting prevents front-running and vote manipulation. Votes are hidden until the reveal phase ensures fair tallying.',
-      icon: (
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#E30613" strokeWidth="1.5">
-          <rect x="3" y="11" width="18" height="11" rx="2" />
-          <path d="M7 11V7a5 5 0 0110 0v4" />
-          <circle cx="12" cy="16" r="1" />
-        </svg>
-      ),
+      icon: <LockIcon size={32} color="#E30613" strokeWidth={1.5} />,
     },
     {
       title: 'Merkle Whitelisting',
       desc: 'Eligible voter addresses are stored in an efficient Merkle tree. On-chain proof verification ensures only authorized wallets can vote.',
-      icon: (
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#E30613" strokeWidth="1.5">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
-      ),
+      icon: <Layers size={32} color="#E30613" strokeWidth={1.5} />,
     },
     {
       title: 'ZK Privacy Proofs',
       desc: 'Zero-knowledge proofs allow voters to prove eligibility without revealing identity. Complete voter anonymity with full verifiability.',
-      icon: (
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#E30613" strokeWidth="1.5">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          <path d="M9 12l2 2 4-4" />
-        </svg>
-      ),
+      icon: <Fingerprint size={32} color="#E30613" strokeWidth={1.5} />,
     },
     {
       title: 'AI Fraud Shield',
       desc: 'Machine learning models detect Sybil attacks, unusual voting patterns, and potential manipulation attempts in real-time.',
-      icon: (
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#E30613" strokeWidth="1.5">
-          <path d="M12 2a10 10 0 110 20 10 10 0 010-20z" />
-          <path d="M12 8v4l3 3" />
-          <path d="M3.5 11h2M18.5 11h2M11 3.5v2M11 18.5v2" />
-        </svg>
-      ),
+      icon: <ShieldCheck size={32} color="#E30613" strokeWidth={1.5} />,
+    },
+    {
+      title: 'Decentralized Audit',
+      desc: 'Everything is public yet private. Any citizen can verify the math while individual voting choices remain cryptographically hidden.',
+      icon: <Database size={32} color="#E30613" strokeWidth={1.5} />,
     },
   ];
 

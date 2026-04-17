@@ -47,6 +47,23 @@ export function clearElectionData() {
   localStorage.removeItem('blockvox_simulated_votes');
 }
 
+export function saveSimulatedVote(voteData: number | number[], mode: VotingMode) {
+  if (typeof window === 'undefined') return;
+  const key = 'blockvox_simulated_votes';
+  const stored = localStorage.getItem(key);
+  const current: any[] = stored ? JSON.parse(stored) : [];
+  current.push({ voteData, mode, timestamp: Date.now() });
+  localStorage.setItem(key, JSON.stringify(current));
+  // Dispatch event so other tabs (Dashboard) update immediately
+  window.dispatchEvent(new Event('storage'));
+}
+
+export function getSimulatedVotes() {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem('blockvox_simulated_votes');
+  return stored ? JSON.parse(stored) : [];
+}
+
 export const DEFAULT_CANDIDATES: Candidate[] = [
   { id: 0, name: 'Alice Nakamoto', party: 'Innovation Party' },
   { id: 1, name: 'Bob Satoshi', party: 'Transparency Alliance' },

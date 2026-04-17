@@ -31,7 +31,7 @@ import {
   markTokenUsed,
 } from '@/lib/blockvox';
 import { NetworkBanner } from '@/components/network-banner';
-import { getElectionData, type Candidate, VotingMode } from '@/lib/election-store';
+import { getElectionData, saveSimulatedVote, type Candidate, VotingMode } from '@/lib/election-store';
 import { loadMerkleTree, getProof, verifyProof } from '@/lib/merkle-tree';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -538,6 +538,9 @@ export default function VotePage() {
       setTimeout(() => {
         const txHash = randomHex(64);
         setRevealTxHash(txHash);
+
+        // PERSIST SIMULATED VOTE FOR DASHBOARD SYNC
+        saveSimulatedVote(voteData, mode);
         
         // Celebration!
         confetti({
