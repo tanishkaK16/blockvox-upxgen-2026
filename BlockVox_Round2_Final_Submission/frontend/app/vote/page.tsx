@@ -406,6 +406,27 @@ export default function VotePage() {
 
     setLoadingStep('Generating random salt...');
 
+    // ── Pre-flight Sync Check ──
+    if (!demoMode && liveMode && publicClient) {
+      try {
+        const onChainRoot = await publicClient.readContract({
+          address: BLOCKVOX_CONTRACT_ADDRESS,
+          abi: blockvoxABI,
+          functionName: 'merkleRoot',
+        }) as `0x${string}`;
+
+        const tree = loadMerkleTree();
+        if (tree && onChainRoot !== tree.root) {
+          setLoading(false);
+          setLoadingStep('');
+          setTxError('On-chain Whitelist Mismatch. The admin needs to "Start Election" again with the latest voter file to sync the records.');
+          return;
+        }
+      } catch (e) {
+        console.warn('Sync check failed:', e);
+      }
+    }
+
     if (!demoMode && liveMode && walletClient && publicClient && address) {
       // ─── LIVE: Real on-chain commit ───
       try {

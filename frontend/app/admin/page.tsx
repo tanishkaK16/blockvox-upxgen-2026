@@ -22,6 +22,7 @@ import {
   Search, ShieldCheck
 } from 'lucide-react';
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
+import { type Address } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { SNOWTRACE_URL } from '@/lib/contract';
 import {
@@ -32,7 +33,9 @@ import {
   waitForTx,
   generateVoterTokens,
   getStoredTokens,
-  type VoterToken
+  type VoterToken,
+  BLOCKVOX_CONTRACT_ADDRESS,
+  blockvoxABI
 } from '@/lib/blockvox';
 import { NetworkBanner } from '@/components/network-banner';
 import { saveElectionData, type Candidate, VotingMode } from '@/lib/election-store';
@@ -133,6 +136,23 @@ export default function AdminPage() {
         setMerkleRoot(tree.root);
         setVoterCount(addresses.length);
         addLog(`Merkle root computed: ${tree.root.slice(0, 18)}...`);
+
+        // Check if out of sync with chain
+        if (liveMode && publicClient) {
+          publicClient.readContract({
+            address: BLOCKVOX_CONTRACT_ADDRESS as Address,
+            abi: blockvoxABI,
+            functionName: 'merkleRoot',
+          }).then((onChainRoot: any) => {
+            if (onChainRoot !== tree.root) {
+              addLog('⚠ WHITELIST OUT OF SYNC: On-chain root differs from this file.');
+              addLog('Action: Click "Start Election" to deploy new root. ✓');
+            } else {
+              addLog('✓ WHITESLIST SYNCED: Matches on-chain state.');
+            }
+          }).catch(() => {});
+        }
+
         addLog(`Tree depth: ${tree.layers.length - 1} levels (${addresses.length} leaves)`);
 
         // Check if connected wallet is on the whitelist
