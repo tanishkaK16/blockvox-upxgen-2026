@@ -45,6 +45,7 @@ export default function AdminPage() {
   const [treeRef, setTreeRef] = useState<MerkleTree | null>(null);
   const [tokens, setTokens] = useState<VoterToken[]>([]);
   const [votingMode, setVotingMode] = useState<VotingMode>(VotingMode.Single);
+  const [demoMode, setDemoMode] = useState(false); // NEW: Demo Mode toggle
 
   const addLog = (msg: string) => {
     setLogs((prev) => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev]);
@@ -148,7 +149,7 @@ export default function AdminPage() {
       votingMode: votingMode
     });
 
-    if (liveMode && walletClient && publicClient && address) {
+    if (!demoMode && liveMode && walletClient && publicClient && address) {
       try {
         // 1. Set mode first
         addLog(`Configuring for ${VotingMode[votingMode]}...`);
@@ -184,7 +185,7 @@ export default function AdminPage() {
     addLog('Submitting endElection() transaction...');
     setElectionStatus('creating');
 
-    if (liveMode && walletClient && publicClient && address) {
+    if (!demoMode && liveMode && walletClient && publicClient && address) {
       try {
         const txHash = await endElectionOnChain(walletClient, address);
         addLog(`Tx submitted: ${txHash.slice(0, 18)}...`);
@@ -246,6 +247,25 @@ export default function AdminPage() {
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-2">Election Management</h1>
           <p className="text-gray-400">Create and manage elections on the BlockVox protocol</p>
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-8 p-4 bg-white/5 border border-white/10 rounded-xl">
+          <div className="flex items-center gap-6">
+            <div 
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all ${
+                demoMode ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' : 'bg-black/40 border-white/10 text-gray-500'
+              }`}
+              onClick={() => setDemoMode(!demoMode)}
+            >
+              <div className={`w-2 h-2 rounded-full ${demoMode ? 'bg-cyan-400 animate-pulse' : 'bg-gray-700'}`} />
+              <span className="text-[10px] font-black uppercase tracking-tighter">Demo Mode</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Protocol Sync</span>
+              <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${liveMode ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>
+                {liveMode ? 'Live - Avalanche Fuji' : 'Local / Simulated'}
+              </span>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

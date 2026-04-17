@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Suppress MetaMask / wallet extension error overlays */
+nextjs-portal {
+  display: none !important;
+}
+body > iframe[style*="position: fixed"] {
+  display: none !important;
+}
+
 @theme {
   --color-blockvox-red: #E30613;
   --color-blockvox-red-dark: #B80510;

@@ -385,7 +385,7 @@ export default function VotePage() {
 
     setLoadingStep('Generating random salt...');
 
-    if (liveMode && walletClient && publicClient && address) {
+    if (!demoMode && liveMode && walletClient && publicClient && address) {
       // ─── LIVE: Real on-chain commit ───
       try {
         setLoadingStep('Computing keccak256(candidateId, salt)...');
@@ -476,7 +476,7 @@ export default function VotePage() {
     }
     const { voteData, salt: storedSalt, mode } = JSON.parse(stored);
 
-    if (liveMode && walletClient && publicClient && address) {
+    if (!demoMode && liveMode && walletClient && publicClient && address) {
       try {
         setLoadingStep('Preparing reveal payload...');
         await new Promise(r => setTimeout(r, 400));

@@ -29,18 +29,6 @@ export const avalancheFuji: Chain = {
   testnet: true,
 };
 
-    default: {
-      http: ['https://api.avax.network/ext/bc/C/rpc'],
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: 'SnowTrace',
-      url: 'https://snowtrace.io',
-    },
-  },
-  testnet: false,
-};
 
 /* ─── Wagmi + RainbowKit Config ─────────────────────── */
 export const config = getDefaultConfig({
