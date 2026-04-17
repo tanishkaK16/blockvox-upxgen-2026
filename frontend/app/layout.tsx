@@ -33,6 +33,28 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
+        {/* Suppress chrome.runtime errors from wallet extensions */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.addEventListener('error', function(e) {
+            if (e.message && (
+              e.message.includes('chrome.runtime') ||
+              e.message.includes('Extension context') ||
+              e.message.includes('message port closed')
+            )) {
+              e.preventDefault();
+              e.stopPropagation();
+              return true;
+            }
+          }, true);
+          window.addEventListener('unhandledrejection', function(e) {
+            if (e.reason && e.reason.message && (
+              e.reason.message.includes('chrome.runtime') ||
+              e.reason.message.includes('Extension context')
+            )) {
+              e.preventDefault();
+            }
+          });
+        `}} />
       </head>
       <body className="bg-[#0A0A0A] text-white antialiased">
         <Web3Provider>
