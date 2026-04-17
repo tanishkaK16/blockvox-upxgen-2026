@@ -14,27 +14,45 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
   PieChart, Pie
 } from 'recharts';
 import { 
   ShieldCheck, Info, RefreshCw, Layers, Award, 
-  ChevronRight, Brain, AlertTriangle, Download
+  ChevronRight, Brain, AlertTriangle, Download,
+  CheckCircle2, Activity
 } from 'lucide-react';
 import { 
   runFPTP, runApproval, runScore, runIRV, 
   VERITASIUM_CANDIDATES, getVeritasiumPreferences,
+  generateRealisticPreferences,
   type Candidate, type VoterPreference, type SimulationResults
 } from '@/lib/sim-engine';
+import { getElectionData } from '@/lib/election-store';
 
 const COLORS = ['#E30613', '#06B6D4', '#10B981', '#F59E0B', '#8B5CF6'];
 
 export default function SimulatorPage() {
-  const [activeSet, setActiveSet] = useState<'veritasium' | 'balanced'>('veritasium');
-  const [candidates] = useState<Candidate[]>(VERITASIUM_CANDIDATES);
+  const [activeSet, setActiveSet] = useState<'veritasium' | 'live' | 'balanced'>('veritasium');
+  const [candidates, setCandidates] = useState<Candidate[]>(VERITASIUM_CANDIDATES);
   const [preferences, setPreferences] = useState<VoterPreference[]>(getVeritasiumPreferences());
+  const [liveElectionName, setLiveElectionName] = useState<string | null>(null);
+
+  // ─── SYNC WITH LIVE ELECTION ───
+  useEffect(() => {
+    const live = getElectionData();
+    if (live && live.candidates && live.candidates.length > 0) {
+      setLiveElectionName(live.name);
+      
+      // Default to live election if found
+      setActiveSet('live');
+      const liveCandidates = live.candidates.map(c => ({ id: c.id, name: c.name }));
+      setCandidates(liveCandidates);
+      setPreferences(generateRealisticPreferences(liveCandidates, 150));
+    }
+  }, []);
 
   const results = useMemo(() => {
     return [
@@ -47,19 +65,23 @@ export default function SimulatorPage() {
 
   const loadBalancedData = () => {
     setActiveSet('balanced');
-    const balancedPrefs: VoterPreference[] = [];
-    for (let i = 0; i < 100; i++) {
-      balancedPrefs.push({
-        ranks: [1, 2, 3],
-        approvals: [1, 2, 3],
-        scores: { 1: Math.floor(Math.random() * 11), 2: Math.floor(Math.random() * 11), 3: Math.floor(Math.random() * 11) }
-      });
-    }
+    const balancedPrefs = generateRealisticPreferences(candidates, 100);
     setPreferences(balancedPrefs);
   };
 
+  const loadLiveElection = () => {
+    const live = getElectionData();
+    if (live && live.candidates) {
+      setActiveSet('live');
+      const liveCandidates = live.candidates.map(c => ({ id: c.id, name: c.name }));
+      setCandidates(liveCandidates);
+      setPreferences(generateRealisticPreferences(liveCandidates, 150));
+    }
+  }
+
   const loadVeritasium = () => {
     setActiveSet('veritasium');
+    setCandidates(VERITASIUM_CANDIDATES);
     setPreferences(getVeritasiumPreferences());
   };
 
@@ -89,7 +111,20 @@ export default function SimulatorPage() {
             </p>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
+            {liveElectionName && (
+              <button 
+                onClick={loadLiveElection}
+                className={`px-6 py-3 rounded-xl border text-sm font-bold transition-all flex items-center gap-2 ${
+                  activeSet === 'live' 
+                    ? 'border-green-500 bg-green-500/10 text-white shadow-[0_0_20px_rgba(34,197,94,0.2)]' 
+                    : 'border-white/10 text-gray-400 hover:border-green-500/30'
+                }`}
+              >
+                <Activity size={16} className={activeSet === 'live' ? 'animate-pulse' : ''} />
+                Live: {liveElectionName.split(' ')[0]}...
+              </button>
+            )}
             <button 
               onClick={loadVeritasium}
               className={`px-6 py-3 rounded-xl border text-sm font-bold transition-all flex items-center gap-2 ${

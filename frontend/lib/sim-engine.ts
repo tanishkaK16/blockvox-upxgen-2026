@@ -189,3 +189,32 @@ export function getVeritasiumPreferences(): VoterPreference[] {
 
   return prefs;
 }
+
+/** 
+ * Dynamically generates a synthetic pool of voter preferences for a custom candidate set.
+ * Designed to show mathematical drift between voting systems.
+ */
+export function generateRealisticPreferences(candidates: Candidate[], count: number = 100): VoterPreference[] {
+  const prefs: VoterPreference[] = [];
+  const ids = candidates.map(c => c.id);
+
+  for (let i = 0; i < count; i++) {
+    // 1. Shuffled ranks
+    const ranks = [...ids].sort(() => Math.random() - 0.5);
+
+    // 2. Scores (Higher for preferred ranks)
+    const scores: Record<number, number> = {};
+    ranks.forEach((id, index) => {
+      // Preference index 0 gets 8-10, index 1 gets 6-8, etc.
+      const base = Math.max(0, 10 - index * 2);
+      scores[id] = Math.min(10, base + Math.floor(Math.random() * 3));
+    });
+
+    // 3. Approvals (Anyone with score > 6)
+    const approvals = ids.filter(id => scores[id] >= 6);
+
+    prefs.push({ ranks, approvals, scores });
+  }
+
+  return prefs;
+}
