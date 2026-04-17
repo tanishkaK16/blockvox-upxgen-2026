@@ -222,3 +222,54 @@ export async function endElection(walletClient: WalletClient, account: Address):
 export function isContractDeployed(): boolean {
   return BLOCKVOX_CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000' && BLOCKVOX_CONTRACT_ADDRESS.length === 42;
 }
+
+/* ─── Voter Token System (Demo Only) ───────────────── */
+
+export interface VoterToken {
+  code: string;
+  used: boolean;
+  usedBy?: string;
+  usedAt?: string;
+}
+
+export function generateVoterTokens(count: number): VoterToken[] {
+  const tokens: VoterToken[] = [];
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No confusing 0/O or 1/I
+  
+  for (let i = 0; i < count; i++) {
+    let code = 'PVG-';
+    for (let j = 0; j < 6; j++) {
+      code += chars[Math.floor(Math.random() * chars.length)];
+    }
+    tokens.push({ code, used: false });
+  }
+
+  const existing = getStoredTokens();
+  const combined = [...existing, ...tokens];
+  localStorage.setItem('blockvox_voter_tokens', JSON.stringify(combined));
+  return combined;
+}
+
+export function getStoredTokens(): VoterToken[] {
+  if (typeof window === 'undefined') return [];
+  const data = localStorage.getItem('blockvox_voter_tokens');
+  return data ? JSON.parse(data) : [];
+}
+
+export function validateVoterToken(code: string): { valid: boolean; used: boolean } {
+  const tokens = getStoredTokens();
+  const token = tokens.find(t => t.code === code);
+  if (!token) return { valid: false, used: false };
+  return { valid: true, used: token.used };
+}
+
+export function markTokenUsed(code: string, address: string): void {
+  const tokens = getStoredTokens();
+  const index = tokens.findIndex(t => t.code === code);
+  if (index !== -1) {
+    tokens[index].used = true;
+    tokens[index].usedBy = address;
+    tokens[index].usedAt = new Date().toISOString();
+    localStorage.setItem('blockvox_voter_tokens', JSON.stringify(tokens));
+  }
+}

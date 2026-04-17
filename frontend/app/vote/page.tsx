@@ -12,6 +12,8 @@ import {
   commitVoteOnChain,
   revealVoteOnChain,
   waitForTx,
+  validateVoterToken,
+  markTokenUsed,
 } from '@/lib/blockvox';
 import { getElectionData, type Candidate, VotingMode } from '@/lib/election-store';
 import { loadMerkleTree, getProof, verifyProof } from '@/lib/merkle-tree';
@@ -217,7 +219,7 @@ export default function VotePage() {
   const { data: walletClient } = useWalletClient();
   const [phase, setPhase] = useState<Phase>('connect');
   const [candidates, setCandidates] = useState<Candidate[]>([...DEFAULT_CANDIDATES]);
-  const [nftId, setNftId] = useState<string>(''); 
+  const [voterToken, setVoterToken] = useState<string>(''); 
   const [demoMode, setDemoMode] = useState<boolean>(false); // NEW: Demo Mode toggle
   const [votingMode, setVotingMode] = useState<VotingMode>(VotingMode.Single);
   const [selectedCandidate, setSelectedCandidate] = useState<number | null>(null);
@@ -359,6 +361,21 @@ export default function VotePage() {
     setLoading(true);
     setTxError('');
 
+    // Check token if not in demo mode
+    if (!demoMode) {
+      const check = validateVoterToken(voterToken);
+      if (!check.valid) {
+        setLoading(false);
+        setTxError('Invalid Voter Token. Please enter a valid PVG-XXXXXX code from Admin panel.');
+        return;
+      }
+      if (check.used) {
+        setLoading(false);
+        setTxError('This Voter Token has already been used.');
+        return;
+      }
+    }
+
     // Generate real salt and commitment hash using viem's keccak256
     const newSalt = generateSalt();
     setSalt(newSalt);
@@ -385,15 +402,18 @@ export default function VotePage() {
           If demoMode is active, we use 0 or a fixed value.
         */
         setLoadingStep('Broadcasting to Avalanche Fuji...');
-        const actualNftId = demoMode ? 0n : BigInt(nftId || 0);
         
         const txHash = await commitVoteOnChain(
           commitment, 
           proofNodes as `0x${string}`[], 
-          actualNftId,
+          0n, // Pass 0 as nftId on-chain as we use our Token system for sync
           walletClient, 
           address
         );
+
+        if (!demoMode) {
+           markTokenUsed(voterToken, address);
+        }
         setCommitTxHash(txHash);
 
         const receipt = await waitForTx(publicClient, txHash);
@@ -784,23 +804,42 @@ export default function VotePage() {
                   Your vote will be encrypted as <code className="text-[#E30613] bg-[#E30613]/5 px-1.5 py-0.5 rounded text-[11px]">keccak256(id, salt)</code> and committed on-chain.
                 </p>
 
-                {/* VoterPass NFT Innovation: prevents double voting */}
-                <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-8">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Brain className="text-cyan-400" size={18} />
-                    <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">VoterPass NFT Identification</span>
+                {/* Voter Token System (Demo Shortcut) */}
+                {!demoMode && (
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-8">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" strokeWidth="2">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          <path d="M7 11V7a5 5 0 0110 0v4" />
+                        </svg>
+                      </div>
+                      <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Voter Token Identification</span>
+                    </div>
+                    <input 
+                      type="text"
+                      value={voterToken}
+                      onChange={(e) => setVoterToken(e.target.value.toUpperCase())}
+                      placeholder="Enter PVG-XXXXXX..."
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-center font-mono text-xl tracking-[0.3em] text-cyan-400 placeholder-gray-800 focus:border-cyan-500 transition-all mb-2 uppercase"
+                    />
+                    <div className="flex items-center justify-between">
+                       <p className="text-[9px] text-gray-600 italic">
+                        Required for secure demo participation.
+                       </p>
+                       <p className="text-[8px] font-bold text-cyan-500/50 uppercase tracking-tighter cursor-pointer hover:text-cyan-400 transition-colors" onClick={() => window.location.href='/admin'}>
+                        Get Token in Admin →
+                       </p>
+                    </div>
                   </div>
-                  <input 
-                    type="number"
-                    value={nftId}
-                    onChange={(e) => setNftId(e.target.value)}
-                    placeholder="Enter VoterPass NFT ID (to nullify)..."
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#E30613] transition-all mb-2"
-                  />
-                  <p className="text-[9px] text-gray-600 italic">
-                    Note: Your NFT ID will be permanently nullified in this election cycle to ensure one-human-one-vote.
-                  </p>
-                </div>
+                )}
+
+                {demoMode && (
+                  <div className="bg-green-500/5 border border-green-500/10 rounded-xl p-4 mb-8 flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-[9px] font-black text-green-500 uppercase tracking-widest">Demo Mode Active – Token Check Bypassed</span>
+                  </div>
+                )}
 
                 <div className="space-y-4 mb-8">
                   {candidates.map((c, i) => (

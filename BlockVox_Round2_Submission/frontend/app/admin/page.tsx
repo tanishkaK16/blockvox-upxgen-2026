@@ -10,6 +10,9 @@ import {
   setVotingModeOnChain,
   endElection as endElectionOnChain,
   waitForTx,
+  generateVoterTokens,
+  getStoredTokens,
+  type VoterToken
 } from '@/lib/blockvox';
 import { saveElectionData, type Candidate, VotingMode } from '@/lib/election-store';
 import {
@@ -39,11 +42,34 @@ export default function AdminPage() {
   const [merkleError, setMerkleError] = useState('');
   const [logs, setLogs] = useState<string[]>([]);
   const [treeRef, setTreeRef] = useState<MerkleTree | null>(null);
-
+  const [tokens, setTokens] = useState<VoterToken[]>([]);
   const [votingMode, setVotingMode] = useState<VotingMode>(VotingMode.Single);
 
   const addLog = (msg: string) => {
     setLogs((prev) => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev]);
+  };
+
+  const handleGenerateTokens = () => {
+    const newTokens = generateVoterTokens(50);
+    setTokens([...newTokens]);
+    addLog('Generated 50 new unique voter tokens ✓');
+  };
+
+  const handleTokenUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      const newTokens: VoterToken[] = lines.map(t => ({ code: t.startsWith('PVG-') ? t : `PVG-${t}`, used: false }));
+      const existing = getStoredTokens();
+      const combined = [...existing, ...newTokens];
+      localStorage.setItem('blockvox_voter_tokens', JSON.stringify(combined));
+      setTokens(combined);
+      addLog(`Imported ${lines.length} tokens from CSV ✓`);
+    };
+    reader.readAsText(file);
   };
 
   const addCandidate = () => {
@@ -411,6 +437,58 @@ export default function AdminPage() {
                 </button>
               </div>
             )}
+
+            {/* Voter Token Management */}
+            <div className="glass-card p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-[#06B6D4]" />
+                  Demo Voter Tokens
+                </h3>
+                <div className="flex gap-2">
+                   <div className="relative">
+                      <input 
+                        type="file" 
+                        accept=".csv,.txt" 
+                        onChange={handleTokenUpload}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                      <button className="text-[10px] font-bold uppercase tracking-wider bg-white/5 border border-white/10 px-3 py-1.5 rounded hover:bg-white/10 transition-all">
+                        Upload CSV
+                      </button>
+                   </div>
+                   <button 
+                     onClick={handleGenerateTokens}
+                     className="text-[10px] font-bold uppercase tracking-wider bg-[#06B6D4]/10 border border-[#06B6D4]/20 text-[#06B6D4] px-3 py-1.5 rounded hover:bg-[#06B6D4]/20 transition-all"
+                   >
+                     Generate 50 Tokens
+                   </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                {(tokens.length > 0 ? tokens : getStoredTokens()).map((t, i) => (
+                  <div 
+                    key={i} 
+                    className={`
+                      text-[10px] font-mono p-2 rounded border text-center
+                      ${t.used 
+                        ? 'bg-gray-800/50 border-gray-700 text-gray-600' 
+                        : 'bg-white/5 border-white/10 text-gray-300'
+                      }
+                    `}
+                  >
+                    {t.code}
+                    {t.used && <div className="text-[8px] text-red-500 mt-0.5">USED</div>}
+                  </div>
+                ))}
+                {(tokens.length === 0 && getStoredTokens().length === 0) && (
+                  <div className="col-span-full py-8 text-center text-xs text-gray-600 font-mono italic">
+                    No tokens generated yet. Generate some for your demo voters.
+                  </div>
+                )}
+              </div>
+            </div>
 
             {electionStatus === 'ended' && (
               <div className="glass-card p-8 border border-green-500/20">
