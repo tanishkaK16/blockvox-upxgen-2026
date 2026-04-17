@@ -1,17 +1,27 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { useSectionObserver } from '@/hooks/use-section-observer';
 import { 
   Unlock, EyeOff, Ban, AlertTriangle, 
   ShieldCheck, LayoutDashboard, Brain, 
   Activity, Zap, Info, AlertCircle,
-  FileSearch, Lock, CheckCircle2,
+  FileSearch, CheckCircle2,
   ChevronDown, ArrowRight, Layers,
   Fingerprint, Database, Eye,
-  Lock as LockIcon,  // Aliased to avoid conflict
+  Lock as LockIcon,
   Share2
 } from 'lucide-react';
+
+/**
+ * ═══════════════════════════════════════════════════════
+ * BLOCKVOX — LANDING PORTAL
+ * ═══════════════════════════════════════════════════════
+ * The primary entry point for the BlockVox protocol. Provides high-fidelity 
+ * visualization of the e-voting mission and technical architecture.
+ * ═══════════════════════════════════════════════════════
+ */
 
 /* ─────────────────────── Hero ─────────────────────── */
 function HeroSection() {
@@ -43,32 +53,11 @@ function HeroSection() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link href="/vote" className="btn-primary text-lg px-10 py-4 flex items-center gap-2">
-            Connect Wallet &amp; Vote <ArrowRight size={20} />
+            Connect Wallet & Vote <ArrowRight size={20} />
           </Link>
           <Link href="#how-it-works" className="btn-secondary px-8 py-4 flex items-center gap-2">
             How it Works <ChevronDown size={20} />
           </Link>
-        </div>
-
-        {/* Animated ballot + chain visual */}
-        <div className="mt-20 flex items-center justify-center gap-4 opacity-30">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4">
-              <div
-                className="w-12 h-12 border border-white/20 rounded-lg flex items-center justify-center"
-                style={{ animationDelay: `${i * 0.3}s` }}
-              >
-                {i % 2 === 0 ? (
-                  <LayoutDashboard size={20} strokeWidth={1.5} />
-                ) : (
-                  <ShieldCheck size={20} color="#E30613" strokeWidth={1.5} />
-                )}
-              </div>
-              {i < 4 && (
-                <div className="w-8 h-[1px] bg-gradient-to-r from-white/20 to-white/5" />
-              )}
-            </div>
-          ))}
         </div>
       </div>
 
@@ -130,7 +119,7 @@ function ProblemSection() {
               className="glass-card p-8"
               style={{ transitionDelay: `${i * 100}ms` }}
             >
-              <div className="mb-4">{p.icon}</div>
+              <div className="mb-4 text-2xl">{p.icon}</div>
               <h3 className="text-lg font-semibold mb-2">{p.title}</h3>
               <p className="text-sm text-gray-400 leading-relaxed">{p.desc}</p>
             </div>
@@ -195,9 +184,9 @@ function SolutionSection() {
                 { label: 'AI scans for anomalies', color: '#F59E0B', step: '05' },
                 { label: 'Results tallied & immutably stored', color: '#10B981', step: '06' },
               ].map((step, i) => (
-                <div key={i} className="flex items-center gap-4">
+                <div key={i} className="flex items-center gap-4 relative">
                   <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                    className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 z-10"
                     style={{
                       background: `${step.color}15`,
                       border: `1px solid ${step.color}30`,
@@ -208,7 +197,7 @@ function SolutionSection() {
                   </div>
                   <div className="flex-1 text-sm text-gray-300">{step.label}</div>
                   {i < 5 && (
-                    <div className="w-[1px] h-6 absolute left-[26px] mt-[56px]" style={{ background: `${step.color}30` }} />
+                    <div className="w-[1px] h-6 absolute left-[20px] top-[40px] z-0" style={{ background: `${step.color}30` }} />
                   )}
                 </div>
               ))}
@@ -350,16 +339,6 @@ function ArchitectureSection() {
                   </li>
                 ))}
               </ul>
-            </div>
-          ))}
-        </div>
-
-        {/* Connection lines */}
-        <div className="hidden lg:flex items-center justify-center mt-8 gap-0">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex items-center">
-              <div className="w-20 h-[1px] bg-gradient-to-r from-white/10 via-[#E30613]/30 to-white/10" />
-              <div className="w-3 h-3 rounded-full border border-[#E30613]/40 bg-[#0A0A0A]" />
             </div>
           ))}
         </div>

@@ -41,7 +41,7 @@ import {
   Activity, Zap, CheckCircle2, AlertTriangle,
   RefreshCw, Lock, Unlock, Send, CheckCircle,
   LayoutDashboard, Terminal, Info, ChevronRight,
-  ArrowRight
+  ArrowRight, Shield
 } from 'lucide-react';
 
 type Phase = 'connect' | 'merkle' | 'commit' | 'reveal' | 'success' | 'voted';
