@@ -126,7 +126,7 @@ export function useOnChainResults(numCandidates = CANDIDATE_SLOTS): OnChainResul
           }
         }
       } catch (e) {
-        console.warn('[useOnChainResults] Failed to merge simulated votes:', e);
+        /* Silent merge fail for demo robustness */
       }
 
       setCounts(newCounts);
@@ -138,7 +138,7 @@ export function useOnChainResults(numCandidates = CANDIDATE_SLOTS): OnChainResul
       const block = await client.getBlockNumber();
       setLastBlock(block);
     } catch (err) {
-      console.error('[useOnChainResults] fetch error:', err);
+      /* Error caught by fetcher */
       setStatus('error');
     }
   }, [numCandidates]);
@@ -179,7 +179,7 @@ export function useOnChainResults(numCandidates = CANDIDATE_SLOTS): OnChainResul
         unsub3();
       };
     } catch (err) {
-      console.warn('[useOnChainResults] could not subscribe to events:', err);
+      /* Silent subscription fail */
     }
   }, [fetchResults]);
 

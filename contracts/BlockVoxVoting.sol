@@ -5,34 +5,65 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 /**
- * @title BlockVoxVoting
- * @dev Secure e-voting dApp with Commit-Reveal, Merkle Whitelisting, and NFT Nullifiers.
- * Developed for PVG Nashik upXgen 2026 Hackathon.
+ * ═══════════════════════════════════════════════════════
+ * BLOCKVOX — TRUSTLESS E-VOTING PROTOCOL
+ * ═══════════════════════════════════════════════════════
+ * Author: BlockVox Engineering Team (upXgen 2026, PVG Nashik)
+ * Network: Avalanche Fuji Testnet
+ * 
+ * CORE ARCHITECTURE:
+ * 1. COMMIT-REVEAL PRIVACY: Votes are hidden using keccak256 hashes until tallying.
+ * 2. MERKLE WHITELISTING: Compresses voter eligibility into a single 32-byte root.
+ * 3. MULTI-MODE TALLYING: Native support for Plurality, Approval, and Score models.
+ * 4. SYBIL RESISTANCE: Two-layer defense (Merkle Proofs + VoterPass Nullifiers).
+ * ═══════════════════════════════════════════════════════
  */
+
 contract BlockVoxVoting is ReentrancyGuard {
     enum VotingMode { Single, Approval, Score }
 
+    // --- STATE VARIABLES ---
+    
+    /// @notice Authorized administrator (Deployer) with governance rights.
     address public immutable admin;
+    
+    /// @notice The 32-byte root for student eligibility verification.
     bytes32 public merkleRoot;
+    
+    /// @notice True if the protocol is currently accepting commitments and reveals.
     bool public electionActive;
+    
+    /// @notice The democratic model being used for the current session.
     VotingMode public votingMode;
 
-    // --- Key Innovation: NFT Pass & Nullifier ---
-    // Tracks if a specific VoterPass NFT ID has been used to vote
+    /** 
+     * @notice SYBIL DEFENSE: Burnable Nullifier Mapping. 
+     * Maps a VoterPass ID to a 'spent' status, preventing double-voting even if 
+     * the system transitions across different democratic models.
+     */
     mapping(uint256 => bool) public nftNullifier;
+    
+    /// @dev Optional address for a secondary VoterPass NFT contract.
     address public voterPassNFT; 
 
-    // --- Commit-Reveal Logic ---
-    // Phase 1: commitments[hash(vote, salt)] = true
-    // Phase 2: verify hash(input, salt) == commitments[hash]
+    /** 
+     * @notice PRIVACY SHIELD: Commitment Mapping.
+     * Stores blinded votes (keccak256(choice + salt)) to prevent front-running.
+     */
     mapping(bytes32 => bool) public commitments;
     
-    // Tally storage
-    mapping(uint256 => uint256) public voteCounts; // Used for Single and Approval (Plurality)
-    mapping(uint256 => uint256) public totalScores; // Used for Score mode (Cumulative)
-    mapping(address => bool) public hasVoted; // Wallet-level check
+    /** 
+     * @notice ON-CHAIN TALLY: Protocol Storage.
+     * Stores results for Plurality (Single), Consensus (Approval), and Intensity (Score).
+     */
+    mapping(uint256 => uint256) public voteCounts;  
+    mapping(uint256 => uint256) public totalScores; 
+    
+    /// @notice Wallet-level nullifier to ensure 1-person-1-vote at the account level.
+    mapping(address => bool) public hasVoted;      
 
-    event ElectionStarted(bytes32 merkleRoot, VotingMode mode);
+    // --- EVENTS ---
+    event ElectionStarted(bytes32 indexed merkleRoot, VotingMode mode);
     event VotingModeUpdated(VotingMode mode);
     event VoteCommitted(address indexed voter, bytes32 commitmentHash);
     event VoteRevealed(address indexed voter, uint256 choice);
@@ -40,88 +71,123 @@ contract BlockVoxVoting is ReentrancyGuard {
     event ScoreVoteRevealed(address indexed voter, uint256[] scores);
     event ElectionEnded(uint256[] finalResults);
 
+    /** @dev Constructor initializes the protocol state. Defaults to 'Single Choice' mode. */
     constructor() {
         admin = msg.sender;
         votingMode = VotingMode.Single;
     }
 
+    /** @dev Protocol security: Ensures only the authorized admin can trigger lifecycle transitions. */
     modifier onlyAdmin() {
-        require(msg.sender == admin, "Only admin can call this");
+        require(msg.sender == admin, "AUTH_FAILURE: ADMIN_ONLY");
         _;
     }
 
     /** 
-     * @dev Configures the voting system type (Single, Approval, or Score). 
-     * This makes BlockVox address democratic paradoxes like Arrow's Impossibility Theorem. 
+     * @notice Sets the democratic sub-protocol for the upcoming election.
+     * @dev Must be called while the protocol is idle to ensure consistency.
+     * @param mode 0: Single, 1: Approval, 2: Score.
      */
     function setVotingMode(uint8 mode) external onlyAdmin {
-        require(!electionActive, "Cannot change mode during active election");
-        require(mode <= uint8(VotingMode.Score), "Invalid mode");
+        require(!electionActive, "STATE_ERR: ELECTION_ACTIVE");
+        require(mode <= uint8(VotingMode.Score), "PARAM_ERR: INVALID_MODE");
         votingMode = VotingMode(mode);
         emit VotingModeUpdated(votingMode);
     }
 
-    /** @dev Sets the NFT contract address for VoterPass validation */
+    /** 
+     * @notice Links an external VoterPass asset to the protocol.
+     * @param _nftAddress The address of the deployed NFT collection.
+     */
     function setVoterPassNFT(address _nftAddress) external onlyAdmin {
         voterPassNFT = _nftAddress;
     }
 
-    /** @dev Admin starts election with a Merkle Root of registered student wallets */
+    /** 
+     * @notice Initializes a new governance session with a fresh whitelist.
+     * @dev Synchronizes the off-chain Merkle Root with the Fuji ledger.
+     * @param _merkleRoot The result of hashing the entire voter roll.
+     */
     function startElection(bytes32 _merkleRoot) external onlyAdmin {
-        require(!electionActive, "Election already active");
+        require(!electionActive, "STATE_ERR: ELECTION_ALREADY_ACTIVE");
         merkleRoot = _merkleRoot;
         electionActive = true;
         emit ElectionStarted(_merkleRoot, votingMode);
     }
 
     /** 
-     * @dev Phase 1: Commit Vote.
-     * Uses Merkle Proofs for wallet verification and tracks NFT passes for nullification.
-     * This protects against sybil attacks and double-voting.
+     * @notice PHASE 1: CRYPTOGRAPHIC COMMITMENT.
+     * @notice Secures the voter's intent behind a blinded hash.
+     * @dev Nullifies double-voting via both the msg.sender and the specific nftId.
+     * @param commitmentHash keccak256(choice + salt)
+     * @param proof Merkle proof verifying inclusion in the _merkleRoot.
+     * @param nftId The unique ID of the voter's digital pass (0 for wallet-verified only).
      */
     function commitVote(bytes32 commitmentHash, bytes32[] calldata proof, uint256 nftId) external nonReentrant {
-        require(electionActive, "Election is not active");
-        require(!hasVoted[msg.sender], "Wallet has already voted");
+        require(electionActive, "STATE_ERR: ELECTION_INACTIVE");
+        require(!hasVoted[msg.sender], "AUTH_ERR: WALLET_ALREADY_VOTED");
         
-        // Innovation: NFT Nullifier check
-        // If an NFT is used, it cannot be used again by any wallet
+        /**
+         * DOUBLE-VOTING DEFENSE
+         * If an nftId is provided (e.g., from a VoterPass), it is marked as spent.
+         * This prevents a user from voting with the same pass twice across multiple wallets.
+         */
         if (nftId != 0) {
-            require(!nftNullifier[nftId], "VoterPass NFT already used");
+            require(!nftNullifier[nftId], "TOKEN_ERR: VPASS_ALREADY_USED");
             nftNullifier[nftId] = true;
         }
 
-        // --- Merkle Whitelist Verification ---
+        /**
+         * MERKLE VERIFICATION: Zero-Knowledge Inclusion.
+         * Verifies msg.sender exists in the student root without exposing global state.
+         */
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-        require(MerkleProof.verify(proof, merkleRoot, leaf), "Not on student whitelist");
+        require(MerkleProof.verify(proof, merkleRoot, leaf), "WHITELIST_ERR: NOT_ELIGIBLE");
 
         commitments[commitmentHash] = true;
         emit VoteCommitted(msg.sender, commitmentHash);
     }
 
-    /** @dev Phase 2: Reveal Single Choice Ballot (FPTP) */
+    /** 
+     * @notice PHASE 2: REVEAL (SINGLE CHOICE).
+     * @notice Unlocks a standard ballot and increments the tally.
+     * @param candidateId The ID of the option being tallied.
+     * @param salt The high-entropy secret used for the commitment in Phase 1.
+     */
     function revealVote(uint256 candidateId, bytes32 salt) external nonReentrant {
-        require(electionActive, "Election is not active");
-        require(votingMode == VotingMode.Single, "Mode mismatch: Use voteApproval or voteScore");
+        require(electionActive, "STATE_ERR: ELECTION_INACTIVE");
+        require(votingMode == VotingMode.Single, "PROTOCOL_ERR: MODE_MISMATCH");
         
-        // Cryptographic check: Hashes the reveal input with salt to match local store
+        /**
+         * COMMITMENT HANDSHAKE
+         * Recomputes the hash to ensure the salt and choice match the Phase 1 submission.
+         */
         bytes32 commitmentHash = keccak256(abi.encodePacked(candidateId, salt));
-        require(commitments[commitmentHash], "Invalid commitment match");
+        require(commitments[commitmentHash], "CRYPT_ERR: INVALID_MATCH");
 
         voteCounts[candidateId]++;
         hasVoted[msg.sender] = true;
-        delete commitments[commitmentHash]; // Clean state to prevent double reveal
+        
+        // SECURITY: Prevent double-reveal by deleting the commitment
+        delete commitments[commitmentHash]; 
 
         emit VoteRevealed(msg.sender, candidateId);
     }
 
-    /** @dev Phase 2: Reveal Approval Ballot (Consensus Choice) */
+    /** 
+     * @notice PHASE 2: REVEAL (APPROVAL VOTING).
+     * @notice Tallies multiple acceptable options based on a weighted consensus.
+     * @param approvedCandidates Array of candidate IDs selected by the voter.
+     * @param salt The salt used for the commitment mapping.
+     */
     function voteApproval(uint256[] calldata approvedCandidates, bytes32 salt) external nonReentrant {
-        require(electionActive, "Election is not active");
-        require(votingMode == VotingMode.Approval, "Mode mismatch");
+        require(electionActive, "STATE_ERR: ELECTION_INACTIVE");
+        require(votingMode == VotingMode.Approval, "PROTOCOL_ERR: MODE_MISMATCH");
         
         bytes32 commitmentHash = keccak256(abi.encodePacked(approvedCandidates, salt));
-        require(commitments[commitmentHash], "Invalid commitment match");
+        require(commitments[commitmentHash], "CRYPT_ERR: INVALID_MATCH");
 
+        // Atomic tally update
         for (uint256 i = 0; i < approvedCandidates.length; i++) {
             voteCounts[approvedCandidates[i]]++;
         }
@@ -132,16 +198,21 @@ contract BlockVoxVoting is ReentrancyGuard {
         emit ApprovalVoteRevealed(msg.sender, approvedCandidates);
     }
 
-    /** @dev Phase 2: Reveal Score Ballot (Cardinal Utility) */
+    /** 
+     * @notice PHASE 2: REVEAL (SCORE VOTING).
+     * @notice Tallies intensity ratings (0-10) per candidate.
+     * @param scores The cardinal utility scores for each ballot option.
+     * @param salt The salt used for the commitment mapping.
+     */
     function voteScore(uint256[] calldata scores, bytes32 salt) external nonReentrant {
-        require(electionActive, "Election is not active");
-        require(votingMode == VotingMode.Score, "Mode mismatch");
+        require(electionActive, "STATE_ERR: ELECTION_INACTIVE");
+        require(votingMode == VotingMode.Score, "PROTOCOL_ERR: MODE_MISMATCH");
         
         bytes32 commitmentHash = keccak256(abi.encodePacked(scores, salt));
-        require(commitments[commitmentHash], "Invalid commitment match");
+        require(commitments[commitmentHash], "CRYPT_ERR: INVALID_MATCH");
 
         for (uint256 i = 0; i < scores.length; i++) {
-            require(scores[i] <= 10, "Intensity limit: 0-10 score per candidate");
+            require(scores[i] <= 10, "VALIDATION_ERR: SCORE_OUT_OF_BOUNDS_MAX_10");
             totalScores[i] += scores[i];
         }
         
@@ -151,14 +222,20 @@ contract BlockVoxVoting is ReentrancyGuard {
         emit ScoreVoteRevealed(msg.sender, scores);
     }
 
-    /** @dev Closes the election and tallies final results */
+    /** 
+     * @notice Concludes the governance session.
+     * @dev Shifts the protocol from an active state to an archival results state.
+     */
     function endElection() external onlyAdmin {
-        require(electionActive, "Election not active");
+        require(electionActive, "STATE_ERR: ELECTION_NOT_ACTIVE");
         electionActive = false;
         emit ElectionEnded(getResults());
     }
 
-    /** @dev Returns results based on active system (Average Score vs Plurality Count) */
+    /** 
+     * @notice Fetches the current tally for all candidates.
+     * @return results A numeric array containing counts or scores per option.
+     */
     function getResults() public view returns (uint256[] memory) {
         uint256[] memory results = new uint256[](10);
         if (votingMode == VotingMode.Score) {

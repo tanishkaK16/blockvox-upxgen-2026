@@ -58,7 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             )) {
               e.preventDefault();
               e.stopImmediatePropagation();
-              console.log('%c[BlockVox] Suppressed extension error', 'color: #E30613;');
+              /* Silent suppression for clean demo */
               return false;
             }
           }, true);
@@ -85,7 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               var dialog = overlay.shadowRoot.querySelector('[role="dialog"]');
               if (dialog && dialog.textContent && dialog.textContent.includes('chrome.runtime')) {
                 overlay.remove();
-                console.log('%c[BlockVox] Removed extension error overlay', 'color: #E30613;');
+                /* Silent removal */
               }
             }
           });

@@ -1,19 +1,17 @@
 'use client';
 
 /**
- * Pure-JS Merkle tree compatible with OpenZeppelin's MerkleProof.sol
- *
- * Leaf hashing matches the Solidity contract:
- *   bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
- *
- * Tree construction follows OZ convention:
- *   - Leaves are sorted before hashing pairs
- *   - Pairs are always sorted before hashing: keccak256(sort(a,b))
- *
- * Usage:
- *   const tree = buildMerkleTree(['0xabc...', '0xdef...']);
- *   const proof = getProof(tree, '0xabc...');
- *   const root  = tree.root;
+ * ═══════════════════════════════════════════════════════
+ * BLOCKVOX — MERKLE TREE CRYPTOGRAPHY ENGINE
+ * ═══════════════════════════════════════════════════════
+ * This module handles the construction, serialization, and 
+ * verification of Merkle Trees used for voter whitelisting.
+ * 
+ * PROTOCOL COMPATIBILITY:
+ * - Matches OpenZeppelin's MerkleProof.sol standard.
+ * - Leaf hashing logic: keccak256(abi.encodePacked(address)).
+ * - Pairs are sorted before hashing: keccak256(sort(a, b)).
+ * ═══════════════════════════════════════════════════════
  */
 
 import { keccak256, encodePacked, type Address } from 'viem';

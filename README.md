@@ -6,6 +6,25 @@
 
 ---
 
+## 🚀 Quick Judge Testing Guide
+
+1.  **Initialize Environment**: Run `npm install` and then `npm run dev` in the project root.
+2.  **Toggle Demo Mode**: Enable the **"Demo Mode"** checkbox in the header of the Admin and Vote pages for a gas-free, high-fidelity experience.
+3.  **Admin Orchestration**:
+    -   Navigate to `/admin`.
+    -   Upload `voters_sample.csv` (located in root).
+    -   Click **"Generate 50 Tokens"** to seed the VoterPass registry.
+    -   Click **"Start Election"** to sync the Merkle Root with the ledger.
+4.  **Voter Participation**:
+    -   Navigate to `/vote`.
+    -   Enter a generated **VoterPass** (e.g., PVG-XXXXXX from the admin registry).
+    -   Perform the two-phase **Commit-Reveal** handshake (Choice -> Lock -> Unlock).
+5.  **Tally Verification**:
+    -   Monitor live results on the `/dashboard`.
+    -   Explore synthetic preference models in the `/simulator`.
+
+---
+
 ## 🏛️ Project Gateway
 BlockVox is a secure, private, and verifiable e-voting protocol built on **Avalanche Fuji Testnet**. It features a modern commit-reveal architecture, Merkle tree whitelisting, and a high-fidelity transparency dashboard.
 
@@ -16,19 +35,9 @@ For a deep dive into our innovations, architecture, and demo guide, please refer
 
 ---
 
-## 🚀 Fast-Track Guide for Judges
-
-1. **Deploy/Sync**: Connect as Admin, upload `voters_sample.csv`, and click **"Start Election"** to sync the whitelist with the blockchain.
-2. **Participate**: In the `/vote` portal, connect your wallet, enter a VoterPass code, and perform the **Commit-Reveal** handshake.
-3. **Analyze**: Visualize results in the real-time `/dashboard` and explore alternative math in the `/simulator`.
-
-*Note: For a zero-gas experience, toggle **Demo Mode** in the header of the Admin and Vote pages.*
-
----
-
 ## 📂 Modular Structure
-- `/contracts`: Core protocol logic (Solidity ^0.8.24).
-- `/frontend/app`: Next.js 15 UI with high-fidelity glassmorphism.
+- `/contracts`: Core protocol logic (Solidity ^0.8.24) with NatSpec documentation.
+- `/frontend/app`: Next.js 15 UI with modular `PhaseRenderer` architecture.
 - `/frontend/lib`: Cryptography, Merkle Trees, and Simulation Engine.
 - `/frontend/hooks`: Reactive on-chain synchronization.
 - `/scripts`: Deployment and automation scripts.

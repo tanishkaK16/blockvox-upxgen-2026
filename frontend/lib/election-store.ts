@@ -1,5 +1,14 @@
 'use client';
 
+/**
+ * ═══════════════════════════════════════════════════════
+ * BLOCKVOX — ELECTION STATE STORAGE
+ * ═══════════════════════════════════════════════════════
+ * This module orchestrates the persistence of candidate 
+ * registries and democratic sub-protocol configurations.
+ * ═══════════════════════════════════════════════════════
+ */
+
 export interface Candidate {
   id: number;
   name: string;
